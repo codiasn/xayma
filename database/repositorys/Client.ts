@@ -3,6 +3,7 @@ import { BaseRepository } from "./Base";
 import { DataSource } from "typeorm";
 import { Client } from "database/entitys/Client";
 import { _FindOptions } from "database/entitys/Base";
+import jwt from "utils/jwt";
 
 @Injectable()
 export class ClientRepository extends BaseRepository<Client> {
@@ -16,9 +17,13 @@ export class ClientRepository extends BaseRepository<Client> {
     if (data.id) {
       client = await this._findOne({ id: data.id });
       if (!client) throw new NotFoundException("client_not_found");
+    } else {
+      client.generateId();
+      client.accessToken = jwt.sign({ clientId: client.id });
     }
 
     client.name = data.name || client.name;
+    client.description = data.description || client.description;
     client.logo = data.logo === null ? null : data.logo || client.logo;
 
     if (!(await client.save())) await client.save();
@@ -42,7 +47,14 @@ export class ClientRepository extends BaseRepository<Client> {
       );
     }
 
-    const clients = await queryBuilder.getMany();
+    let clients = await queryBuilder.getMany();
+
+    if (!params._findOptions?.withAccessToken) {
+      clients = clients.map((client) => {
+        delete client.accessToken;
+        return client;
+      });
+    }
 
     return clients;
   }

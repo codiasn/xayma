@@ -6,13 +6,13 @@ import {
   ExecutionContext,
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
   Logger,
   NestInterceptor,
 } from "@nestjs/common";
 import { Request } from "express";
-import { catchError, map, Observable, tap, throwError } from "rxjs";
+import { catchError, map, Observable, throwError } from "rxjs";
+import { getLibellys } from "utils/error";
 import forge from "utils/forge";
 
 @Injectable()
@@ -56,7 +56,8 @@ export class GlobalInterceptor implements NestInterceptor {
           typeof datas.content === "string" &&
           datas.content.includes("base64")
         ) {
-          datas.content = `${process.env.API_URL}/static/${datas.id}`;
+          delete datas.content;
+          datas.url = `${process.env.API_URL}/static/${datas.id}`;
         } else {
           for (const key in datas) {
             datas[key] = _decrypter(datas[key]);
@@ -75,14 +76,45 @@ export class GlobalInterceptor implements NestInterceptor {
       Logger.error(error);
     }
 
-    if (error instanceof HttpException) return throwError(error);
+    if (error instanceof HttpException) {
+      console.log(error.message);
+
+      const messages = {};
+      for (const label of error.message.split(";")) {
+        messages[label] = getLibellys(label);
+      }
+
+      error.message = JSON.stringify({
+        label: error.message,
+        translate: messages,
+      });
+
+      return throwError(new HttpException(error.message, error.getStatus()));
+    }
 
     if (typeof error === "string") {
+      const messages = {};
+
+      for (const label of error.split(";")) {
+        messages[label] = getLibellys(label);
+      }
+
+      error = JSON.stringify({
+        label: error,
+        translate: messages,
+      });
+
       return throwError(new HttpException(error, HttpStatus.BAD_REQUEST));
     }
 
     return throwError(
-      new HttpException("internal_error", HttpStatus.INTERNAL_SERVER_ERROR),
+      new HttpException(
+        JSON.stringify({
+          label: "internal_error",
+          translate: getLibellys("internal_error"),
+        }),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      ),
     );
   }
 
@@ -98,18 +130,15 @@ export class GlobalInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
-        console.log("++++++++", data);
-
-        //   if (request.session) {
-        //     data = forge.session.encrypter(data, request.session.publicKey);
-        //   }
+        if (request.session) {
+          data = forge.session.encrypter(data, request.session.publicKey);
+        }
 
         data = this.linkFyle(data);
 
         return data;
       }),
       catchError((error) => {
-        console.log("dfsfsdf");
         return this._throwError(error);
       }),
     );

@@ -30,19 +30,32 @@ export class AuthGuard implements CanActivate {
 
     if (!token) return false;
 
-    const decodedToken = await this.authServie.verifyToken(token);
+    const { session, profiles, access } =
+      await this.authServie.verifyToken(token);
 
     if (!isPublic) {
-      if (!decodedToken || !decodedToken.user) {
+      if (!session || !(session.user || session.accessToken)) {
         throw new ForbiddenException("not_authorized");
       }
 
-      if (decodedToken.closed && !isPublic) {
+      if (session.closed && !isPublic) {
         throw new ForbiddenException("session_closed");
       }
     }
 
-    request.session = decodedToken;
+    request.session = session;
+    request.metadata ||= {} as any;
+
+    if (profiles.length) {
+      request.metadata.client = profiles[0].client;
+      request.metadata.profiles = profiles;
+    }
+
+    request.metadata.access = access;
+    if (request.metadata.access.client) {
+      request.metadata.client = request.metadata.access.client.client;
+    }
+
     return true;
   }
 

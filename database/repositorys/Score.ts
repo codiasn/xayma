@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { BaseRepository } from "./Base";
 import { DataSource } from "typeorm";
 import { Score } from "database/entitys/Score";
@@ -15,7 +11,10 @@ export class ScoreRepository extends BaseRepository<Score> {
     super(dataSource, Score);
   }
 
-  async _add(data: { score: number }, application: Application) {
+  async _add(
+    data: { score: number; metadata: { [x: string]: any } },
+    application: Application,
+  ) {
     const score = new Score();
 
     // si once est défini, vérifie qu'il n'y a pas un score
@@ -32,6 +31,7 @@ export class ScoreRepository extends BaseRepository<Score> {
     }
 
     score.score = data.score;
+    score.metadata = data.metadata;
     score.application = application;
 
     await score.save();

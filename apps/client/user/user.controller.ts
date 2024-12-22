@@ -19,6 +19,11 @@ export class UserController {
     return user;
   }
 
+  @Post("/me")
+  async updateMe(@Body() body: any) {
+    return await this.service.updateMe(body);
+  }
+
   @Post()
   async list(@Body() body: any) {
     return await this.service.list(body);
@@ -34,10 +39,5 @@ export class UserController {
   @Put("update")
   async update(@Body() body: any) {
     return await this.service.update(body);
-  }
-
-  @Put("update-me")
-  async updateMe(@Body() body: any) {
-    return await this.service.updateMe(body);
   }
 }

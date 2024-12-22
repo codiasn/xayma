@@ -16,6 +16,7 @@ export interface _SaveOptions {
 export interface _FindOptions<T = any> {
   [x: string]: any;
   _findOptions?: {
+    [key: string]: any;
     beforeFind?: (queryBuilder: SelectQueryBuilder<any>) => void;
     join?: (string | [string, string])[];
   };

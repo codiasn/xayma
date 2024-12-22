@@ -10,6 +10,7 @@ import { REQUEST } from "@nestjs/core";
 import { SessionRepository } from "database/repositorys/Session";
 import { UserRepository } from "database/repositorys/User";
 import { Request } from "express";
+import forge from "utils/forge";
 import { sign, verify } from "utils/jwt";
 import { sendMail } from "utils/mailer";
 
@@ -19,15 +20,33 @@ export class SessionService {
   @Inject() private repository: SessionRepository;
   @Inject() private userRepository: UserRepository;
 
-  async init(params: { publicKey: string }) {
+  async init(params: { publicKey: string; accessToken?: string }) {
     if (!this.request.session) {
-      this.request.session = await this.repository._add(params.publicKey);
+      this.request.session = await this.repository._add(
+        params.publicKey,
+        params.accessToken,
+      );
+
+      return {
+        sessionId: this.request.session.id,
+        apiPublicKey: forge.keys.public,
+      };
+    } else {
+      const client = this.request.metadata.client;
+      delete client.accessToken;
+      return {
+        sessionId: this.request.session.id,
+        apiPublicKey: forge.keys.public,
+        profiles: this.request.metadata.profiles,
+        client,
+      };
     }
-    return { token: this.request.session.id };
   }
 
   async register(params: any) {
-    return await this.repository._register(params);
+    await this.repository._register(params);
+
+    return {};
   }
 
   async confirmIdentity(token: string) {
@@ -35,7 +54,7 @@ export class SessionService {
 
     await this.repository._update(this.request.session.id, { user });
 
-    return { token: this.request.session.id };
+    return { sessionId: this.request.session.id };
   }
 
   async login(params: { email: string; password: string }) {
@@ -43,7 +62,10 @@ export class SessionService {
       throw new ConflictException("not_authorized");
     }
 
-    const user = await this.userRepository._findOne({ email: params.email });
+    const user = await this.userRepository._findOne({
+      email: params.email,
+      _findOptions: { join: ["profiles", ["profiles.client", "client"]] },
+    });
     if (!user) throw new NotFoundException("email_or_password_incorect");
 
     if (
@@ -58,7 +80,10 @@ export class SessionService {
 
     await this.repository._update(this.request.session.id, { user });
 
-    return { token: this.request.session.id };
+    return {
+      client: user.profiles[0].client,
+      profiles: user.profiles,
+    };
   }
 
   async logout() {

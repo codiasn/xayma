@@ -18,10 +18,10 @@ export class Client extends Base {
   @IsString({ message: "client_name_must_be_string" })
   @MinLength(5, {
     message: (arg) =>
-      `client_name_length_must_be_greater_than_${arg.constraints}`,
+      `client_name_length_must_be_greater_than:${arg.constraints}`,
   })
   @MaxLength(80, {
-    message: (arg) => `client_name_length_must_be_less_than_${arg.constraints}`,
+    message: (arg) => `client_name_length_must_be_less_than:${arg.constraints}`,
   })
   @Column({ type: "varchar" })
   name: string;
@@ -40,6 +40,9 @@ export class Client extends Base {
 
   @OneToMany(() => Profile, (profile) => profile.client)
   profiles: Profile[];
+
+  @Column({ type: "text", nullable: true })
+  accessToken: string;
 
   @BeforeInsert()
   @BeforeUpdate()

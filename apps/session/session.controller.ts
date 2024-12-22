@@ -32,6 +32,12 @@ export class SessionController {
   }
 
   @Public()
+  @Post("login")
+  async login(@Body() body: any) {
+    return await this.service.login(body);
+  }
+
+  @Public()
   @Post("confirm-identity")
   async confirmIdentity(@Query("token") token: string) {
     const decoded = verify(token) as { id: string };
@@ -45,12 +51,6 @@ export class SessionController {
     });
 
     return await this.service.confirmIdentity(token);
-  }
-
-  @Public()
-  @Post("login")
-  async login(@Body() body: any) {
-    return await this.service.login(body);
   }
 
   @Post("logout")

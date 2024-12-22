@@ -10,7 +10,7 @@ export class ScoreService {
   @Inject() private repository: ScoreRepository;
   @Inject() private applicationRepository: ApplicationRepository;
 
-  async get(params: any) {
+  async list(params: any) {
     const scores = await this.repository._find(params);
     return scores;
   }

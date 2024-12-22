@@ -10,6 +10,9 @@ export class Session extends Base {
   @Column({ type: "text" })
   publicKey: string;
 
+  @Column({ type: "text", nullable: true })
+  accessToken: string;
+
   @ManyToOne(() => User, (user) => user.sessions)
   user: User;
 }

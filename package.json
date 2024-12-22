@@ -1,5 +1,5 @@
 {
-  "name": "form.api",
+  "name": "xya.api",
   "private": true,
   "version": "beta-0.7.1",
   "description": "digibank api",
@@ -26,6 +26,7 @@
     "@nestjs/platform-express": "^10.3.2",
     "@nestjs/platform-socket.io": "^10.3.8",
     "@nestjs/schedule": "^4.0.2",
+    "@nestjs/swagger": "^8.1.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.3.8",
     "@paypal/paypal-server-sdk": "^0.6.0",

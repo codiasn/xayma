@@ -4,11 +4,10 @@ import {
   Get,
   Inject,
   NotFoundException,
+  Param,
   Post,
 } from "@nestjs/common";
 import { Public } from "decorators/index";
-import { ApplicationService } from "./client/application/application.service";
-import { ScoreService } from "./client/score/score.service";
 import { ScoreRepository } from "database/repositorys/Score";
 import { ApplicationRepository } from "database/repositorys/Application";
 
@@ -24,15 +23,27 @@ export class AppController {
   }
 
   @Public()
-  @Post("/score")
-  async score(@Body() body: any) {
+  @Post("/score/:application")
+  async score(@Body() body: any, @Param("application") applicationId: string) {
     const application = await this.applicationRepository._findOne({
-      id: body.application,
+      id: applicationId,
     });
 
     if (!application) throw new NotFoundException("application_not_found");
 
-    await this.scoreRepository._add(body, application);
-    return {};
+    const score = await this.scoreRepository._add(body, application);
+
+    delete score.application?.client;
+
+    return score;
+  }
+
+  @Public()
+  @Get("/application/:id")
+  async application(@Param("id") id: string) {
+    const application = await this.applicationRepository._findOne({ id });
+    if (!application) throw new NotFoundException("application_not_found");
+
+    return application;
   }
 }

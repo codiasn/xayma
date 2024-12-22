@@ -1,6 +1,6 @@
 import { Column, Entity, OneToOne } from "typeorm";
 import { Base } from "./Base";
-import { IsInt, IsString } from "class-validator";
+import { IsBase64, IsInt, IsString } from "class-validator";
 import { Application } from "./Application";
 
 @Entity()
@@ -17,9 +17,9 @@ export class Fyle extends Base {
   @Column({ type: "int" })
   size: number;
 
-  @IsString({ message: "fyle_content_must_be_string" })
+  @IsBase64({}, { message: "fyle_content_must_be_base64" })
   @Column({ type: "text" })
-  content: number;
+  content: string;
 
   @OneToOne(() => Application, (application) => application.logo)
   logoApplication: Application;

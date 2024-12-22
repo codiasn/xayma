@@ -21,9 +21,12 @@ export class ApplicationRepository extends BaseRepository<Application> {
 
     application.client = client;
     application.name = data.name || application.name;
+    application.steps = data.steps || application.steps;
+    application.component = data.component || application.component;
     application.description = data.description || application.description;
     application.max = data.max || application.max;
     application.logo = data.logo || application.logo;
+    application.message = data.message || application.message;
 
     application.once =
       typeof data.once === "boolean" ? data.once : application.once;

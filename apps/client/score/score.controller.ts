@@ -10,7 +10,7 @@ export class ScoreController {
 
   @Public()
   @Post()
-  async get(@Body() body: any) {
-    return await this.service.get(body);
+  async list(@Body() body: any) {
+    return await this.service.list(body);
   }
 }

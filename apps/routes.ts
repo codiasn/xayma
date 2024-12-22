@@ -8,7 +8,7 @@ import { UserModule } from "./client/user/user.module";
 const routes: Routes = [
   { path: "/session", module: SessionModule },
   {
-    path: "/client/:client",
+    path: "/_/",
     module: ClientModule,
 
     children: [

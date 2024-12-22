@@ -12,8 +12,12 @@ export class ClientService {
   @Inject() private profileRepository: ProfileRepository;
 
   async update(params: Partial<Client>) {
-    // const application = await this.repository._update(params);
-    // return application;
+    const client = await this.repository._create({
+      ...params,
+      id: this.request.metadata.client.id,
+    });
+
+    return client;
   }
 
   async getCurrent(id: string, userId: string) {

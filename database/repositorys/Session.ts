@@ -1,6 +1,12 @@
 import { Session } from "database/entitys/Session";
 import { DataSource } from "typeorm";
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { BaseRepository } from "./Base";
 import { UserRepository } from "./User";
 import { User } from "database/entitys/User";
@@ -20,9 +26,24 @@ export class SessionRepository extends BaseRepository<Session> {
   @Inject() clientRepository: ClientRepository;
   @Inject() profileRepository: ProfileRepository;
 
-  async _add(publicKey: string) {
+  async _add(publicKey: string, accessToken?: string) {
     const session = new Session();
     session.publicKey = publicKey;
+
+    if (accessToken) {
+      try {
+        const token = jwt.verify(accessToken) as { clientId: string };
+        const client = await this.clientRepository._findOne({
+          id: token.clientId,
+        });
+
+        if (!client) throw new BadRequestException("invalid_access_token");
+
+        session.accessToken = accessToken;
+      } catch (error) {
+        throw new BadRequestException("invalid_access_token");
+      }
+    }
 
     await session.save();
 
@@ -51,7 +72,7 @@ export class SessionRepository extends BaseRepository<Session> {
     //   subject: "Account confirmation",
     // });
 
-    return {};
+    return user;
   }
 
   async _findOne(params: { [x: string]: any }) {

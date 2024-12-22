@@ -10,7 +10,6 @@ import {
 import { Base } from "./Base";
 import { Session } from "./Session";
 import { IsEmail, IsString } from "class-validator";
-import { Fyle } from "./Fyle";
 import { BadRequestException } from "@nestjs/common";
 import forge from "utils/forge";
 import { Profile } from "./Profile";
@@ -20,7 +19,7 @@ export const regexPaswword =
 
 @Entity()
 export class User extends Base {
-  @IsEmail({}, { message: "email_is_not_valid" })
+  @IsEmail({}, { message: "user_email_is_not_valid" })
   @Column({ type: "varchar", unique: true })
   email: string;
 

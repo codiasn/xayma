@@ -1,6 +1,6 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne } from "typeorm";
 import { Base } from "./Base";
-import { IsInt, Min } from "class-validator";
+import { IsInt, IsJSON, IsObject, IsOptional, Min } from "class-validator";
 import { Application } from "./Application";
 import { BadRequestException } from "@nestjs/common";
 
@@ -8,12 +8,20 @@ import { BadRequestException } from "@nestjs/common";
 export class Score extends Base {
   @IsInt({ message: "score_score_must_be_int" })
   @Min(1, {
-    message: (arg) => `score_score_must_be_greater_than_${arg.constraints}`,
+    message: (arg) => `score_score_must_be_greater_than:${arg.constraints}`,
   })
   @Column({ type: "int" })
   score: number;
 
-  @ManyToOne(() => Application, (fyle) => fyle.scores, { nullable: false })
+  @IsOptional()
+  @IsObject({ message: "score_metadata_must_be_object" })
+  @Column({ type: "json", default: {} })
+  metadata: { [key: string]: any };
+
+  @ManyToOne(() => Application, (fyle) => fyle.scores, {
+    nullable: false,
+    onDelete: "CASCADE",
+  })
   application: Application;
 
   @BeforeInsert()
@@ -21,7 +29,7 @@ export class Score extends Base {
   async _onSave() {
     if (this.score > this.application.max) {
       throw new BadRequestException(
-        `score_score_must_be_less_than_${this.application.max}`,
+        `score_score_must_be_less_than:${this.application.max}`,
       );
     }
   }

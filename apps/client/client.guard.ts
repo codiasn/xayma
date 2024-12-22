@@ -19,18 +19,18 @@ export class ClientGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
 
-    if (request.path.startsWith(`/${process.env.ROUTE_PREFIX}/client/`)) {
-      request.metadata ||= {} as any;
-      request.metadata.client = await this.clientServie.getCurrent(
-        request.params.client,
-        request.session.user.id,
-      );
+    if (request.path.startsWith(`/${process.env.ROUTE_PREFIX}/_/`)) {
+      // request.metadata ||= {} as any;
+      // request.metadata.client = await this.clientServie.getCurrent(
+      //   request.params.client,
+      //   request.session.user.id,
+      // );
 
       if (
         !request.metadata.client &&
-        !request.metadata.client.profiles.length
+        !(request.metadata.access.client || request.metadata.profiles.length)
       ) {
-        throw new NotFoundException("client_not_found");
+        throw new NotFoundException("not_authorized");
       }
     }
 
@@ -50,14 +50,16 @@ export class ProfileGuard implements CanActivate {
     );
 
     if (profiles && profiles.length) {
-      const userProfiles = request.metadata.client.profiles.map(
-        (profile) => profile.profile,
-      );
-      const hasProfiles = userProfiles.some((pr) => profiles.includes(pr));
+      if (request.metadata.access.client) {
+      } else {
+        const userProfiles = request.metadata.profiles.map(
+          (profile) => profile.profile,
+        );
+        const hasProfiles = userProfiles.some((pr) => profiles.includes(pr));
 
-      if (!hasProfiles) throw new ForbiddenException("not_authorized");
+        if (!hasProfiles) throw new ForbiddenException("not_authorized");
+      }
     }
-
     return true;
   }
 }
